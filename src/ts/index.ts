@@ -259,7 +259,7 @@ class HomePage extends StateFull<IHomePageState> {
       photos = await this.photosAlbumService.getPhotosByAlbumId(selectedAlbumId);
     }
 
-    await this.wait(1000);
+    await this.wait(2000);
 
     this.setState({
       albums: allAlbums.slice(0, 5),
