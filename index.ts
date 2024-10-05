@@ -37,10 +37,9 @@ type Lesson = {
 
 type ValidationConflictType = 'ProfessorConflict' | 'ClassroomConflict';
 
-type ValidationResult = {
-    isValid: boolean;
-    conflictType: ValidationConflictType | null;
-    conflictWithLesson: Lesson | null;
+type ScheduleConflict = {
+    type: ValidationConflictType;
+    lessonDetails: Lesson | null;
 };
 
 const professors: Professor[] = [];
@@ -67,12 +66,12 @@ function addProfessor(professor: Professor) {
 }
 
 function addLesson(lesson: Lesson) {
-    const validationResult = validateLesson(lesson);
-    if (!validationResult.isValid) {
+    const conflicts = validateLesson(lesson);
+    if (conflicts) {
         throw new Error(
-            `Conflict: ${
-                validationResult.conflictType
-            } with lesson${JSON.stringify(validationResult.conflictWithLesson)}`
+            `Conflict: ${conflicts.type} with lesson${JSON.stringify(
+                conflicts.lessonDetails
+            )}`
         );
     }
     schedule.push(lesson);
@@ -104,7 +103,7 @@ function getProfessorSchedule(professorId: number): Lesson[] {
     return schedule.filter((lesson) => lesson.professorId === professorId);
 }
 
-function validateLesson(lesson: Lesson): ValidationResult {
+function validateLesson(lesson: Lesson): ScheduleConflict | null {
     // search for existing lesson by professor at the same time span
     const professorConflict = schedule.find(
         (candidateLesson) =>
@@ -115,9 +114,8 @@ function validateLesson(lesson: Lesson): ValidationResult {
 
     if (professorConflict) {
         return {
-            conflictType: 'ProfessorConflict',
-            conflictWithLesson: professorConflict,
-            isValid: false,
+            type: 'ProfessorConflict',
+            lessonDetails: professorConflict,
         };
     }
 
@@ -131,13 +129,12 @@ function validateLesson(lesson: Lesson): ValidationResult {
 
     if (classroomConflict) {
         return {
-            conflictType: 'ClassroomConflict',
-            conflictWithLesson: classroomConflict,
-            isValid: false,
+            type: 'ClassroomConflict',
+            lessonDetails: classroomConflict,
         };
     }
 
-    return { isValid: true, conflictType: null, conflictWithLesson: null };
+    return null;
 }
 
 function getClassroomUtilization(classroomNumber: string): number {
@@ -177,12 +174,12 @@ function reassignClassroom(lessonId: number, newClassroomNumber: string) {
         throw new Error(`Lesson with id: ${lessonId} was not found`);
     }
 
-    const validationResult = validateLesson(lesson);
-    if (!validationResult.isValid) {
+    const conflict = validateLesson(lesson);
+    if (conflict) {
         throw new Error(
-            `Conflict: ${
-                validationResult.conflictType
-            } with lesson${JSON.stringify(validationResult.conflictWithLesson)}`
+            `Conflict: ${conflict.type} with lesson${JSON.stringify(
+                conflict.lessonDetails
+            )}`
         );
     }
 
