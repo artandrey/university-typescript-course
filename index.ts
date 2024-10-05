@@ -65,16 +65,18 @@ function addProfessor(professor: Professor) {
     professors.push(professor);
 }
 
-function addLesson(lesson: Lesson) {
+function addLesson(lesson: Lesson): boolean {
     const conflicts = validateLesson(lesson);
     if (conflicts) {
-        throw new Error(
-            `Conflict: ${conflicts.type} with lesson${JSON.stringify(
+        console.error(
+            `Conflict: ${conflicts.type} with lesson ${JSON.stringify(
                 conflicts.lessonDetails
             )}`
         );
+        return false;
     }
     schedule.push(lesson);
+    return true;
 }
 
 function findAvailableClassrooms(
@@ -168,22 +170,28 @@ function getMostPopularCourseType(): CourseType {
     ) as keyof typeof courseTypeCountRecord;
 }
 
-function reassignClassroom(lessonId: number, newClassroomNumber: string) {
+function reassignClassroom(
+    lessonId: number,
+    newClassroomNumber: string
+): boolean {
     const lesson = schedule.find((l) => l.courseId === lessonId);
     if (!lesson) {
-        throw new Error(`Lesson with id: ${lessonId} was not found`);
+        console.error(`Lesson with id: ${lessonId} was not found`);
+        return false;
     }
 
     const conflict = validateLesson(lesson);
     if (conflict) {
-        throw new Error(
-            `Conflict: ${conflict.type} with lesson${JSON.stringify(
+        console.error(
+            `Conflict: ${conflict.type} with lesson ${JSON.stringify(
                 conflict.lessonDetails
             )}`
         );
+        return false;
     }
 
     lesson.classroomNumber = newClassroomNumber;
+    return true;
 }
 
 function cancelLesson(lessonId: number): void {
@@ -208,44 +216,49 @@ const professor2: Professor = {
 addProfessor(professor1);
 addProfessor(professor2);
 
-try {
+console.assert(
     addLesson({
         courseId: 1,
         professorId: 1,
         classroomNumber: '101',
         dayOfWeek: 'Monday',
         timeSlot: '8:30-10:00',
-    });
+    }),
+    'Failed to add lesson for courseId: 1'
+);
+
+console.assert(
     addLesson({
         courseId: 2,
         professorId: 2,
         classroomNumber: '102',
         dayOfWeek: 'Monday',
         timeSlot: '10:15-11:45',
-    });
+    }),
+    'Failed to add lesson for courseId: 2'
+);
+
+console.assert(
     addLesson({
         courseId: 1,
         professorId: 1,
         classroomNumber: '101',
         dayOfWeek: 'Tuesday',
         timeSlot: '8:30-10:00',
-    });
+    }),
+    'Failed to add lesson for courseId: 1 on Tuesday'
+);
 
-    // This will throw an error cause of conflict with the same professor at the same time
+console.assert(
     addLesson({
         courseId: 2,
         professorId: 1,
         classroomNumber: '101',
         dayOfWeek: 'Monday',
         timeSlot: '8:30-10:00',
-    });
-} catch (error) {
-    if (error instanceof Error) {
-        console.error(error.message);
-    } else {
-        console.error('Unexpected error occurred');
-    }
-}
+    }),
+    'Failed to add lesson for courseId: 2 due to a conflict with professorId: 1'
+);
 
 // Get professor's schedule
 try {
@@ -272,16 +285,10 @@ const popularCourseType = getMostPopularCourseType();
 console.log('Most Popular Course Type:', popularCourseType);
 
 // Reassign classroom for a lesson
-try {
-    reassignClassroom(1, '102');
-    console.log('Reassigned Classroom for Lesson 1 to 102');
-} catch (error) {
-    if (error instanceof Error) {
-        console.error(error.message);
-    } else {
-        console.error('Unexpected error occurred');
-    }
-}
+console.assert(
+    reassignClassroom(1, '102'),
+    'Failed to reassign classroom for Lesson 1 to 102'
+);
 
 // Cancel a lesson
 try {
