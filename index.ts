@@ -1,4 +1,3 @@
-// Визначення enum'ів
 enum StudentStatus {
   Active = 'Active',
   Academic_Leave = 'Academic_Leave',
@@ -31,7 +30,6 @@ enum Faculty {
   Engineering = 'Engineering',
 }
 
-// Визначення інтерфейсів
 interface Student {
   id: number;
   fullName: string;
